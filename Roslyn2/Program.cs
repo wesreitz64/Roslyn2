@@ -14,6 +14,12 @@ namespace Roslyn2
     {
         static void Main(string[] args)
         {
+            //  string[] filePaths = Directory.GetFiles(@"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects", "*.cs", SearchOption.AllDirectories);
+            var dirs = Directory.GetDirectories(@"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects")
+                .Where(a=>a.Contains("Luminator")
+                &&  !a.EndsWith("Host")
+                && !a.Contains("Test")).ToArray();
+
             string[] projectLocations = new string[]
             {
                @"C:\Users\wreitz\Source\Repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.Provider.Host"
@@ -21,24 +27,35 @@ namespace Roslyn2
 
             string projectDirectoryLocation = @"C:\Users\wreitz\Source\Repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core";
 
-            string uml = string.Empty;
-              projectLocations.ToList().ForEach((a)=> uml += GetProjectClasses(a));
-                       
+            string uml = StartUml();
+             dirs.ToList().ForEach((a)=> uml += GetProjectClasses(a));
+            uml += EndUml();
+            Console.WriteLine(uml);
             int f = 0;
 
+        }
+
+        private static string EndUml()
+        {
+            return "\n @enduml";
+        }
+
+        private static string StartUml()
+        {
+            return "\n @startUml \n";
         }
 
         static string GetProjectClasses(string projectDirectoryLocation)
         {
             // string[] filePaths = Directory.GetFiles(@"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects", "*.cs", SearchOption.AllDirectories);
            
-            string[] projectFileNames = Directory.GetFiles(projectDirectoryLocation);
-            var dir = Directory.GetDirectoryRoot(projectFileNames?.FirstOrDefault());
+            string[] projectFileNames = Directory.GetFiles(projectDirectoryLocation).Where(a=>a.EndsWith(".cs")).ToArray();
+      //      var dir = Directory.GetDirectoryRoot(projectFileNames?.FirstOrDefault());
       //      var startClass = @"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core\DeliveryManager.cs";
       //      string source = @"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core\DeliveryManager.cs";
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("@startUml");
+          //  sb.AppendLine("@startUml");
             sb.AppendLine("package \"" + Path.GetFileName(projectDirectoryLocation) + "\" #DDDDDD {");
             foreach (var fileString in projectFileNames)
             {
@@ -82,12 +99,12 @@ namespace Roslyn2
                 }
             }
             sb.AppendLine("}");
-            sb.AppendLine("@enduml");
-            Console.WriteLine(sb.ToString());
+          //  sb.AppendLine("@enduml");
+          //  Console.WriteLine(sb.ToString());
 
 
 
-            int f = 0;
+        
             return sb.ToString();
         }
 
