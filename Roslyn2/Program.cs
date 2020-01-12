@@ -39,7 +39,7 @@ namespace Roslyn2
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("@startUml");
-            sb.AppendLine("package \"" + Path.GetFileName(@"C:\Users\wreitz\Source\Repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core") + "\" #DDDDDD {");
+            sb.AppendLine("package \"" + Path.GetFileName(projectDirectoryLocation) + "\" #DDDDDD {");
             foreach (var fileString in projectFileNames)
             {
                 var code = new StreamReader(fileString).ReadToEnd();
