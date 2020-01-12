@@ -14,25 +14,31 @@ namespace Roslyn2
     {
         static void Main(string[] args)
         {
-            GetDeliveryManagerClasses();
+            string[] projectLocations = new string[]
+            {
+               @"C:\Users\wreitz\Source\Repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.Provider.Host"
+            };
+
+            string projectDirectoryLocation = @"C:\Users\wreitz\Source\Repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core";
+
+            string uml = string.Empty;
+              projectLocations.ToList().ForEach((a)=> uml += GetProjectClasses(a));
                        
             int f = 0;
 
         }
 
-        static void GetDeliveryManagerClasses()
+        static string GetProjectClasses(string projectDirectoryLocation)
         {
-            string[] filePaths = Directory.GetFiles(@"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects", "*.cs", SearchOption.AllDirectories);
-            string[] predictionFileNames = Directory.GetFiles(@"C:\Users\wreitz\Source\Repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core");
-            var startClass = @"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core\DeliveryManager.cs";
-
-
-            string source = @"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core\DeliveryManager.cs";
+           // string[] filePaths = Directory.GetFiles(@"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects", "*.cs", SearchOption.AllDirectories);
+            string[] projectFileNames = Directory.GetFiles(projectDirectoryLocation);
+      //      var startClass = @"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core\DeliveryManager.cs";
+      //      string source = @"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core\DeliveryManager.cs";
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("@startUml");
             sb.AppendLine("package \"Classic Collections\" #DDDDDD {");
-            foreach (var fileString in predictionFileNames)
+            foreach (var fileString in projectFileNames)
             {
                 var code = new StreamReader(fileString).ReadToEnd();
 
@@ -40,9 +46,7 @@ namespace Roslyn2
                 SyntaxTree node = CSharpSyntaxTree.ParseText(code);
                 var root = node.GetRoot();
 
-                //  Console.WriteLine(node.Length);
                 var members = node.GetRoot().DescendantNodes().OfType<MemberDeclarationSyntax>().ToList();
-                //  var publicMemebers  = node.GetRoot().DescendantNodes().OfType<MemberDeclarationSyntax>().ToList();
                 var publicMembers = node.GetRoot().DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>().ToList();
                 var fields = node.GetRoot().DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.FieldDeclarationSyntax>().ToList();
                 var descNodes = node.GetRoot().DescendantNodes().ToList();
@@ -82,7 +86,7 @@ namespace Roslyn2
 
 
             int f = 0;
-
+            return sb.ToString();
         }
 
 
