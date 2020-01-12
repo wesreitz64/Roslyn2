@@ -30,14 +30,16 @@ namespace Roslyn2
 
         static string GetProjectClasses(string projectDirectoryLocation)
         {
-           // string[] filePaths = Directory.GetFiles(@"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects", "*.cs", SearchOption.AllDirectories);
+            // string[] filePaths = Directory.GetFiles(@"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects", "*.cs", SearchOption.AllDirectories);
+           
             string[] projectFileNames = Directory.GetFiles(projectDirectoryLocation);
+            var dir = Directory.GetDirectoryRoot(projectFileNames?.FirstOrDefault());
       //      var startClass = @"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core\DeliveryManager.cs";
       //      string source = @"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core\DeliveryManager.cs";
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("@startUml");
-            sb.AppendLine("package \"Classic Collections\" #DDDDDD {");
+            sb.AppendLine("package \"" + Path.GetFileName(@"C:\Users\wreitz\Source\Repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core") + "\" #DDDDDD {");
             foreach (var fileString in projectFileNames)
             {
                 var code = new StreamReader(fileString).ReadToEnd();
