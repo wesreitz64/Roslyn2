@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -14,26 +17,47 @@ namespace Roslyn2
     {
         static void Main(string[] args)
         {
-            //  string[] filePaths = Directory.GetFiles(@"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects", "*.cs", SearchOption.AllDirectories);
-            var dirs = Directory.GetDirectories(@"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects")
-                .Where(a=>a.Contains("Luminator")
-                &&  !a.EndsWith("Host")
-                && !a.Contains("Test")).ToArray();
 
-            string[] projectLocations = new string[]
+            // gets all Dirs foe a given project
+            //var dirs = Directory.GetDirectories(@"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects")
+            //    .Where(a=>a.Contains("Luminator")
+            //    &&  !a.EndsWith("Host")
+            //    &&  a.Contains("TransitPredictions")
+            //    &&  a.Contains("Projects\\Luminator.TransitPredictions.Delivery.Core")
+            //    && !a.Contains("Test")).ToArray();
+
+            string[] dirs = new string[]
             {
-               @"C:\Users\wreitz\Source\Repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.Provider.Host"
-            };
-
-            string projectDirectoryLocation = @"C:\Users\wreitz\Source\Repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core";
+              @"C:\Users\wreitz\Source\Repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core"
+           };
 
             string uml = StartUml();
-             dirs.ToList().ForEach((a)=> uml += GetProjectClasses(a));
+            foreach (var dir in dirs.ToList())
+            {
+                uml += GetProjectClasses(dir);
+            }
+
             uml += EndUml();
             Console.WriteLine(uml);
-            int f = 0;
 
+
+
+            var strCompressed = Cipher.Compress(uml);
+            var s = $"http://www.plantuml.com/plantuml/uml/ {strCompressed}";
+
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = "http://www.plantuml.com/plantuml/uml/Aov9B2hXil98pSd9LoZFByf9iUOgBial0000 ",
+                UseShellExecute = true
+            };
+            Process.Start(psi);
+          
+
+            int f = 0;
+            Console.ReadKey();
         }
+        
 
         private static string EndUml()
         {
@@ -47,30 +71,18 @@ namespace Roslyn2
 
         static string GetProjectClasses(string projectDirectoryLocation)
         {
-            // string[] filePaths = Directory.GetFiles(@"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects", "*.cs", SearchOption.AllDirectories);
-           
-            string[] projectFileNames = Directory.GetFiles(projectDirectoryLocation).Where(a=>a.EndsWith(".cs")).ToArray();
-      //      var dir = Directory.GetDirectoryRoot(projectFileNames?.FirstOrDefault());
-      //      var startClass = @"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core\DeliveryManager.cs";
-      //      string source = @"C:\Users\wreitz\source\repos\ShelterSigns\Source\Projects\Luminator.TransitPredictions.PredictionDelivery.Core\DeliveryManager.cs";
+
+           var projectFileNames = Directory.GetFiles(projectDirectoryLocation).ToArray();  //.Where(a=>a.EndsWith(".cs")).ToArray();
 
             StringBuilder sb = new StringBuilder();
-          //  sb.AppendLine("@startUml");
             sb.AppendLine("package \"" + Path.GetFileName(projectDirectoryLocation) + "\" #DDDDDD {");
             foreach (var fileString in projectFileNames)
             {
                 var code = new StreamReader(fileString).ReadToEnd();
-
-
                 SyntaxTree node = CSharpSyntaxTree.ParseText(code);
-                var root = node.GetRoot();
 
-                var members = node.GetRoot().DescendantNodes().OfType<MemberDeclarationSyntax>().ToList();
                 var publicMembers = node.GetRoot().DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>().ToList();
                 var fields = node.GetRoot().DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.FieldDeclarationSyntax>().ToList();
-                var descNodes = node.GetRoot().DescendantNodes().ToList();
-                var myAssembly = node.GetRoot().Ancestors().OfType<Microsoft.CodeAnalysis.AssemblyIdentity>().ToList();
-                var myParents = node.GetRoot().AncestorsAndSelf().ToList();
                 var className = node.GetRoot().DescendantNodesAndSelf().OfType<ClassDeclarationSyntax>().FirstOrDefault()?.Identifier.Text;
                 if (className != null)
                 {
@@ -78,18 +90,13 @@ namespace Roslyn2
                     sb.AppendLine(@$"class {node.GetRoot().DescendantNodesAndSelf().OfType<ClassDeclarationSyntax>().FirstOrDefault()?.Identifier.Text}" + "{");
                     foreach (var field in fields.Where(a => a.Parent.SyntaxTree == node))
                     {
-
-                      //  sb.AppendLine(@$" {string.Join(" ", field.Modifiers.Select(a => a.Text).ToList()).Replace("private", "-").Replace("public", "+")  } ");
-                        
-                        sb.AppendLine(@$"{string.Join(" ", field.Modifiers.Select(a => a.Text).ToList()).Replace("private", "-").Replace("public", "+")  } {field.Declaration.ToString()  } ");
-                        //  field.Declaration.Variables.OfType<VariableDeclaratorSyntax>().FirstOrDefault().Identifier.Text
-
+                        sb.AppendLine(@$"{string.Join(" ", field.Modifiers.Select(a => a.Text).ToList())
+                            .Replace("private", "-")
+                            .Replace("public", "+")  } {field.Declaration.ToString()  } ");
                     }
-
 
                     foreach (var item in publicMembers)
                     {
-
                         sb.AppendLine("+" + item.Identifier.Text +
                             item.ParameterList.OpenParenToken.Text +
                            (item.ParameterList.Parameters.Count > 0 ? item.ParameterList?.Parameters.ToString() : string.Empty) +
@@ -99,12 +106,6 @@ namespace Roslyn2
                 }
             }
             sb.AppendLine("}");
-          //  sb.AppendLine("@enduml");
-          //  Console.WriteLine(sb.ToString());
-
-
-
-        
             return sb.ToString();
         }
 
